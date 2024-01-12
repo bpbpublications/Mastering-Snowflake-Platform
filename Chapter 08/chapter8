@@ -1,0 +1,153 @@
+/*chapter8 - answer key*/
+
+/*
+Create snowflake objects
+Create custom roles
+Implement dynamic data masking:
+Create dynamic policies
+Apply policies to the Snowflake tables
+Validate applied policies to the tables using various roles. You can refer to below sample query:
+Use role ACCOUNTADMIN;
+select * from RETAIL_POC_DEV.target.customer_details; 
+use role data_analyst;
+select * from RETAIL_POC_DEV.target.customer_details; 
+*/
+
+
+
+/* create warehouse and grant usage */
+
+use role accountadmin;
+create warehouse dev_poc_wh WITH WAREHOUSE_SIZE='X-SMALL';
+grant usage on warehouse dev_poc_wh to sysadmin;
+
+/* create a role */
+use role accountadmin;
+
+create role masking_admin;
+
+
+/* create database objects */
+
+use role accountadmin;
+
+create database demo_db;
+
+use database demo_db;
+
+create schema poc;
+
+use schema poc;
+
+create table customer_details (cust_id integer, cust_name string, cust_email string, addr string);
+
+create table account_details(acct_id integer, acc_name string, accountnumber integer, ssn string, email string );
+
+use warehouse dev_poc_wh;
+
+/*load some sample records using insert statements — */
+
+insert into customer_details values(10120,'smith','smith.c@gmail.com','north york');
+
+insert into customer_details values(11230,'joe','joems@gmail.com','NJ');
+
+insert into account_details values(110111,'smith c',0056937900,3937983,'smith.c@gmail.com');
+
+
+/*Use below commands to grant permissions -> */
+
+use role accountadmin;
+
+GRANT CREATE MASKING POLICY on schema demo_db.poc to role masking_admin;
+
+GRANT APPLY MASKING POLICY on ACCOUNT to role masking_admin;
+
+GRANT ROLE masking_admin to user poojakelgaonkar;
+
+use database demo_db;
+use schema poc;
+
+CREATE OR REPLACE MASKING POLICY email_visibility AS (val string) RETURNS string ->
+
+CASE
+
+WHEN CURRENT_ROLE() IN ('ACCOUNTADMIN') THEN val
+
+ELSE '******@***.com'
+
+END;
+
+
+CREATE OR REPLACE MASKING POLICY identification_visibility AS (val string) RETURNS string ->
+
+CASE
+
+WHEN CURRENT_ROLE() IN ('ACCOUNTADMIN') THEN val
+
+ELSE '********'
+
+END;
+
+/*— apply masking policy to a table column*/
+
+ALTER TABLE IF EXISTS customer_details MODIFY COLUMN cust_email SET MASKING POLICY email_visibility;
+
+/*— apply masking policy to a table column */
+
+ALTER TABLE IF EXISTS account_details MODIFY COLUMN ssn SET MASKING POLICY identification_visibility;
+
+/*validate masked data using sysadmin*/
+
+use role sysadmin;
+
+use database demo_db;
+
+use schema poc;
+
+use warehouse dev_poc_wh;
+
+select * from customer_details;
+
+select * from account_details;
+
+/* validate data using accountadmin */
+
+use role accountadmin;
+
+use database demo_db;
+
+use schema poc;
+
+select * from customer_details;
+
+select * from account_details;
+
+/* Implement object tagging:
+Create object tags for the objects created for retail use case
+Apply those tags to the objects using SQL DDL commands */
+
+use role accountadmin;
+
+use database demo_db;
+
+use schema poc;
+
+/* create tag */
+
+CREATE TAG Personal_info COMMENT = 'PII Data';
+
+/* Add masking policy to the tag created */
+
+ALTER TAG Personal_info SET MASKING POLICY email_visibility;
+
+/* Add tag and policy to the table */
+
+ALTER TABLE demo_db.poc.customer_details SET TAG Personal_info = 'tag-based policies';
+
+select * from customer_details;
+
+/* change the role */
+
+Use role sysadmin;
+select * from customer_details;
+

@@ -1,0 +1,96 @@
+/* chapter-3 excercises : Answer Key */
+/* Exercise 2: Account Setup using SQL commands 
+Once Snowflake trial account is setup, create sample users, roles, warehouses, databases and schemas.
+Create 2 roles – Engineering and Data Scientists
+Create 2 users – Engineer and Analyst
+Create 2 warehouses – Engineering & ML 
+Create 2 databases for Retail domain – RETAIL_DEV & RETAIL_ML
+Create schemas within databases – 
+RETAIL_DEV consist of Product , Sales , Customer
+RETAIL_ML consist of Customer_profiles
+Create tables within RETAIL schemas
+*/
+
+/* Excercise 2 : Answer Key : SQL commands */
+
+USE ROLE ACCOUNTADMIN;
+
+/*Create Roles */
+
+CREATE ROLE DATA_ENG; --data engineer role
+CREATE ROLE DS_ENG; --data scientist role
+
+/* Create Users */
+
+CREATE USER dataengineer 
+PASSWORD='abc@1234' 
+DEFAULT_ROLE = DATA_ENG 
+MUST_CHANGE_PASSWORD = FALSE;
+
+CREATE USER datascientist 
+PASSWORD='abc@1234' 
+DEFAULT_ROLE = DS_ENG 
+MUST_CHANGE_PASSWORD = FALSE;
+
+/* Create Warehouses */
+
+CREATE OR REPLACE WAREHOUSE DATA_ENG_WH WITH WAREHOUSE_SIZE='X-LARGE';
+
+CREATE OR REPLACE WAREHOUSE ML_WH WITH WAREHOUSE_SIZE='X-LARGE';
+
+/* Create database */
+
+CREATE DATABASE RETAIL_DEV;
+CREATE DATABASE RETAIL_ML;
+
+
+/* Create Schema */
+
+USE DATABASE RETAIL_DEV;
+
+CREATE SCHEMA PRODUCT; •	--product schema
+CREATE SCHEMA SALES; •	 --sales schema
+CREATE SCHEMA CUST; •	--customer schema
+
+USE DATABASE RETAIL_ML;
+CREATE SCHEMA CUST_PROFILES;
+
+/* Create RETAIL tables */
+
+USE DATABASE RETAIL_DEV;
+USE SCHEMA PRODUCT;
+
+CREATE TABLE PRODUCT_DETAILS
+(
+PRD_ID INTEGER,
+PRD_NM STRING,
+PRD_QTY INTEGER,
+PRD_AVAIL_IND STRING,
+PRD_STRT_DT DATE,
+PRD_END_DT DATE
+);
+
+USE SCHEMA SALES;
+CREATE TABLE SALES_HISTORY
+(
+SALES_ID INTEGER,
+SALES_AMT INTEGER,
+SALES_QTY INTEGER,
+SALES_DATE DATE,
+SALES_STATUS STRING 
+);
+
+USE SCHEMA CUST;
+CREATE TABLE CUST_INFO
+(
+CUST_ID INTEGER,
+CUST_FRST_NM STRING,
+CUST_LST_NM STRING,
+CUST_FULL_NM STRING,
+CUST_ADDR STRING,
+CUST_IND STRING,
+CUST_STRT_DT DATE,
+CUST_END_DT DATE 
+);
+
+

@@ -1,0 +1,50 @@
+/* chapter 7 - lab answer key */
+/* Environment	DEV & PROD	Setup environment that supports DEV and PROD workloads */
+/* Create databases for DEV and PROD workloads */
+
+CREATE DATABASE DEV;
+CREATE DATABASE PROD;
+
+/* Warehouses	DEV & PROD 	Create warehouses as per DEV and PROD workloads */
+
+CREATE OR REPLACE WAREHOUSE DEV_WH WITH WAREHOUSE_SIZE='X-SMALL';
+CREATE OR REPLACE WAREHOUSE PROD_WH WITH WAREHOUSE_SIZE='X-SMALL';
+
+/*Application development – ETL or data engineering
+Analytics loads
+PROD – 
+ETL Pipelines
+Reporting & BI loads */
+
+CREATE OR REPLACE WAREHOUSE DEV_ETL_WH WITH WAREHOUSE_SIZE='X-SMALL';
+CREATE OR REPLACE WAREHOUSE DEV_DS_WH WITH WAREHOUSE_SIZE='X-SMALL';
+
+CREATE OR REPLACE WAREHOUSE PROD_ETL_WH WITH WAREHOUSE_SIZE='X-SMALL';
+CREATE OR REPLACE WAREHOUSE PROD_DS_WH WITH WAREHOUSE_SIZE='X-SMALL';
+
+/*Create custom roles for these workloads in DEV and PROD environment */
+/*DEV Role for data engineering and analytical loads
+
+PROD read only for ETL and BI loads */
+
+CREATE ROLE DEV_DATA_ENG;
+CREATE ROLE DEV_DS_ENG;
+
+CREATE ROLE PROD_DATA_ENG;
+CREATE ROLE PROD_DS_ENG;
+
+/* Create users for DEV and PROD */ 
+/* Assign DEV and PROD custom roles to the users created */
+
+CREATE USER data_engineer 
+PASSWORD='abc@1234' 
+DEFAULT_ROLE = DEV_DATA_ENG 
+MUST_CHANGE_PASSWORD = FALSE;
+
+CREATE USER data_scientist 
+PASSWORD='abc@1234' 
+DEFAULT_ROLE = DEV_DS_ENG 
+MUST_CHANGE_PASSWORD = FALSE;
+
+
+

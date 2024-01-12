@@ -1,0 +1,62 @@
+/*1.	Create a clone of database created for retail use case:
+a.	Create clone of POC schema and objects.
+b.	Create clone of a table from POC schema.
+c.	Create a data pipeline that loads from files to the cloned object.
+d.	Calculate the data storage from cloned objects.
+*/
+
+/*1.	Create a clone of database created for retail use case:
+a.	Create clone of POC schema and objects.
+b.	Create clone of a table from POC schema.
+c.	Create a data pipeline that loads from files to the cloned object.
+d.	Calculate the data storage from cloned objects.
+*/
+
+USE ROLE ACCOUNTADMIN;
+
+USE DATABASE RETAIL_POC;
+
+USE SCHEMA POC;
+
+CREATE DATABASE RETAIL_POC_CLONE CLONE RETAIL_POC;
+
+USE DATABASE RETAIL_POC_CLONE;
+
+USE SCHEMA POC;
+
+SHOW TABLES;
+
+SHOW STAGES;
+
+SHOW FILE FORMATS;
+
+/*CREATE STAGE AND FILE FORMAT */
+
+CREATE OR REPLACE FILE FORMAT csv_format
+  TYPE = CSV
+  FIELD_DELIMITER = ','
+  SKIP_HEADER = 1
+  NULL_IF = ('NULL', 'null')
+  EMPTY_FIELD_AS_NULL = true;
+  
+CREATE STAGE csv_int_stage
+  FILE_FORMAT = csv_format;
+
+/* UPLOAD SAMPLE CUSTOMER DETAILS FILE */
+
+/* use data values from below data records - 
+10162,'kith','kith.d@gmail.com','NJ'
+11980,'jolly','jolly.b@gmail.com','NC'
+*/
+
+PUT file:///tmp/data/cust_data.csv @csv_int_stage; --change the file path point to your local directory and file. you can create sample csv file to test
+
+
+/*LOAD DATA FROM STAGE */
+
+COPY INTO CUSTOMER_DETAILS
+  FROM @csv_int_stage;
+
+/*check the storage used for database */
+/* all new data load will have new bytes consumed */
+

@@ -1,0 +1,252 @@
+/* Account setup 
+You need to set up a database, schema, and tables for your retail requirement. The following are the pre-requisites to be set up before data sharing:
+•	Create a database: RETAIL_POC
+•	Create a schema: POC
+•	Create tables:
+o	Customer_details
+o	Sales
+o	Order_details
+o	Inventory_details
+
+Data sharing
+Now, you have an account set up and sample data loaded. Next, you need to setup role for data sharing and create shares. 
+•	Create roles:
+o	Data sharing admin – Share_admin
+o	Assign privilege to share the data to the retail objects
+•	Create shares:
+o	Create sales share
+o	Create marketing share
+o	Create inventory share
+•	Reader account setup:
+o	Create reader account for inventory data sharing
+o	Create a warehouse for reader account
+o	Assign warehouse for reader account
+o	Create a resource monitor to review reader usage
+•	Validate data shared as reader account:
+o	Logon as reader account 
+o	List the data shared 
+o	Access inventory data */
+
+/* Account setup 
+You need to set up a database, schema, and tables for your retail requirement. The following are the pre-requisites to be set up before data sharing:
+•	Create a database: RETAIL_POC
+•	Create a schema: POC
+•	Create tables:
+o	Customer_details
+o	Sales
+o	Order_details
+o	Inventory_details
+
+Data sharing
+Now, you have an account set up and sample data loaded. Next, you need to setup role for data sharing and create shares. 
+•	Create roles:
+o	Data sharing admin – Share_admin
+o	Assign privilege to share the data to the retail objects
+•	Create shares:
+o	Create sales share
+o	Create marketing share
+o	Create inventory share
+•	Reader account setup:
+o	Create reader account for inventory data sharing
+o	Create a warehouse for reader account
+o	Assign warehouse for reader account
+o	Create a resource monitor to review reader usage
+•	Validate data shared as reader account:
+o	Logon as reader account 
+o	List the data shared 
+o	Access inventory data */
+
+/* Account setup 
+You need to set up a database, schema, and tables for your retail requirement. The following are the pre-requisites to be set up before data sharing:
+•	Create a database: RETAIL_POC
+•	Create a schema: POC
+•	Create tables:
+o	Customer_details
+o	Sales
+o	Order_details
+o	Inventory_details */
+
+use role accountadmin;
+
+create database RETAIL_POC;
+
+USE DATABASE RETAIL_POC;
+
+CREATE SCHEMA POC;
+
+USE SCHEMA POC;
+
+
+create table customer_details (cust_id integer, cust_name string, cust_email string, addr string);
+
+create table account_details(acct_id integer, acc_name string, accountnumber integer, ssn string, email string );
+
+CREATE OR REPLACE TABLE ORDER_DETAILS
+(
+ORDER_ID INTEGER,
+ORDER_AMT INTEGER,
+SALES_ID INTEGER,
+CUST_ID INTEGER,
+PRD_ID INTEGER,
+ORDER_QTY INTEGER,
+ORDER_DATE DATE,
+ORDER_STATUS STRING 
+);
+
+CREATE OR REPLACE TABLE SALES
+(
+SALES_ID INTEGER,
+CUST_ID INTEGER,
+PRD_ID INTEGER,
+ORDER_ID INTEGER,
+SALES_QTY INTEGER,
+SALES_DATE DATE
+);
+
+CREATE OR REPLACE TABLE INVENTORY_DETAILS
+(
+INVENTORY_ID INTEGER,
+INV_NAME STRING,
+ORDER_ID INTEGER,
+ORDER_QTY INTEGER,
+ORDER_DATE DATE,
+ORDER_STATUS STRING,
+INVENTORY_REMAIN INTEGER,
+INV_STATUS STRING
+);
+
+/*LOAD SAMPLE RECORDS */
+
+insert into customer_details values(10120,'smith','smith.c@gmail.com','north york');
+insert into customer_details values(11230,'joe','joems@gmail.com','NJ');
+
+
+insert into account_details values(110111,'smith c',0056937900,3937983,'smith.c@gmail.com');
+insert into account_details values(11230,'joe',0056937870,4737981,'joems@gmail.com');
+
+INSERT INTO ORDER_DETAILS VALUES (1011,150,110,001,10,05,'2023-11-20','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1012,250,210,120,214,10,'2023-11-29','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1013,050,310,220,480,09,'2023-11-12','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1014,100,410,320,521,07,'2023-11-26','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1015,125,510,421,592,08,'2023-11-22','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1016,175,610,525,212,12,'2023-11-08','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1017,1500,710,610,190,25,'2023-11-05','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1018,85,810,700,140,15,'2023-12-06','IN-PROGRESS');
+INSERT INTO ORDER_DETAILS VALUES (1019,95,910,801,100,20,'2023-12-05','IN-PROGRESS');
+INSERT INTO ORDER_DETAILS VALUES (1020,350,1010,910,1205,15,'2023-12-02','IN-PROGRESS');
+
+INSERT INTO SALES SELECT SALES_ID,CUST_ID,PRD_ID,ORDER_ID,ORDER_QTY, ORDER_DATE FROM ORDER_DETAILS;
+
+INSERT INTO INVENTORY_DETAILS VALUES(10010,'T-SHIRTS',1012,10,'2023-11-29','COMPLETED',120,'STOCKED');
+INSERT INTO INVENTORY_DETAILS VALUES(10913,'BBALL',1017,25,'2023-11-05','COMPLETED',25,'LIMITED');
+INSERT INTO INVENTORY_DETAILS VALUES(10210,'SWEATBAND',1019,10,'2023-12-05','IN-PROGRESS',110,'STOCKED');
+INSERT INTO INVENTORY_DETAILS VALUES(10019,'RACKETS',1020,10,'2023-11-29','IN-PROGRESS',65,'STOCKED');
+
+/*Data sharing
+Now, you have an account set up and sample data loaded. Next, you need to setup role for data sharing and create shares. 
+•	Create roles:
+o	Data sharing admin – Share_admin
+o	Assign privilege to share the data to the retail objects
+•	Create shares:
+o	Create sales share
+o	Create marketing share
+o	Create inventory share
+GRANT PERMISSIONS TO THE ROLE AND DATABASE ON SHARE
+*/
+
+CREATE DATABASE ROLE SHARE_ADMIN;
+
+GRANT USAGE ON SCHEMA RETAIL_POC.POC TO DATABASE ROLE RETAIL_POC.SHARE_ADMIN;
+--GRANT SELECT ON VIEW d1.s1.v1 TO DATABASE ROLE d1.r1;
+
+CREATE SHARE SALES_SHARE;
+
+CREATE SHARE INVENTORY_SHARE;
+
+GRANT USAGE ON DATABASE RETAIL_POC TO SHARE SALES_SHARE;
+
+GRANT USAGE ON DATABASE RETAIL_POC TO SHARE INVENTORY_SHARE;
+
+GRANT DATABASE ROLE RETAIL_POC.SHARE_ADMIN TO SHARE SALES_SHARE;
+
+GRANT DATABASE ROLE RETAIL_POC.SHARE_ADMIN TO SHARE INVENTORY_SHARE;
+
+CREATE SECURE VIEW SALES_VIEW AS SELECT * FROM RETAIL_POC.POC.SALES;
+
+GRANT SELECT ON VIEW SALES_VIEW TO SHARE SALES_SHARE;
+
+CREATE SECURE VIEW INVENTORY_VIEW AS SELECT * FROM RETAIL_POC.POC.INVENTORY_DETAILS;
+
+GRANT SELECT ON VIEW INVENTORY_VIEW TO SHARE INVENTORY_SHARE;
+
+/*LIST GRANTS ON SHARE */
+    
+SHOW GRANTS TO SHARE SALES_SHARE;
+
+SHOW GRANTS TO SHARE INVENTORY_SHARE;
+
+/*	Reader account setup:
+o	Create reader account for inventory data sharing
+o	Create a warehouse for reader account
+o	Assign warehouse for reader account
+o	Create a resource monitor to review reader usage
+•	Validate data shared as reader account:
+o	Logon as reader account 
+o	List the data shared 
+o	Access inventory data */
+
+
+
+USE ROLE ACCOUNTADMIN;
+
+CREATE MANAGED ACCOUNT POOJAK_READER
+    ADMIN_NAME = POOJAK , ADMIN_PASSWORD = 'Test@123' ,
+    TYPE = READER;
+
+    --you get an account created for reader , output is like below
+--{"accountName":"POOJAK_READER","accountLocator":"XXXXX","url":"https://XXXX.snowflakecomputing.com","accountLocatorUrl":"https://XXXX.snowflakecomputing.com"}
+
+
+
+/*ADD ACCOUNTS TO THE SHARE*/
+
+--GO TO SNOWSIGHT DATA PANE -> PRIVATE SHARING -> SHARES BY YOUR ACCOUNT -> CLICK ON ADD CONSUMER TO THE SHARE -> GIVE READER ACCOUNT NAME 
+--ADD READER ACCOUNT TO THE SHARE 
+
+--LOGON TO THE READER ACCOUNT CREATED AND RUN BELOW COMMAND 
+
+/* create warehouse for reader */
+
+USE ACCOUNTADMIN;
+
+
+CREATE OR REPLACE WAREHOUSE reader_wh WAREHOUSE_SIZE='X-SMALL' INITIALLY_SUSPENDED=TRUE;
+
+CREATE OR REPLACE USER READER 
+PASSWORD='abc@1234' 
+DEFAULT_ROLE = PUBLIC 
+MUST_CHANGE_PASSWORD = FALSE;
+
+GRANT USAGE ON WAREHOUSE reader_wh TO ROLE PUBLIC;
+
+-- GO TO DATA PANE OF READER ACCOUNT -> PRIVATE SHARING -> YOU WOULD FIND THE 2 SHARES LISTED ON THE PAGE
+
+/* YOU CAN ALSO RUN BELOW COMMAND ON READER ACCOUNT */
+
+SHOW SHARES;
+
+--YOU WILL GET OUTPUT LIKE THIS
+/*created_on	kind	owner_account	name	database_name	to	owner	comment	listing_global_name
+2023-12-08 09:59:04.856 -0800	INBOUND	OEGXSYF.RACKSPACE_PARTNER	INVENTORY_SHARE					
+2023-12-08 09:59:02.052 -0800	INBOUND	OEGXSYF.RACKSPACE_PARTNER	SALES_SHARE					
+2022-08-30 16:02:35.957 -0700	INBOUND	SNOWFLAKE	ACCOUNT_USAGE	SNOWFLAKE				*/
+
+--GO TO SNOWSIGHT DATA -> PRIVATE SHARING -> CLICK ON GET DATA FOR INVENTORY AND SALES SHARE 
+--PROVIDE THE ROLE TO GRANT ACCESS TO 
+--THIS CREATES DATABASES IN YOUR READER ACCOUNT
+
+/*RUN SQL TO ACCESS SECURE VIEW DATA */
+
+SELECT * FROM SHARE.POC.INVENTORY_VIEW; --YOU WILL HAVE DIFFERENT DATABASE NAME BASED ON YOUR ACCOUNT
+
+

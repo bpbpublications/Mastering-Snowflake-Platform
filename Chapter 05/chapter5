@@ -1,0 +1,135 @@
+/* chapter 5 - answer keys */
+
+/* 1.	Create Stream - Implement a scenario to create table, reference data, integrate changes and create streams on top of it to capture changes. 
+Create table to capture Retail order, purchase or sale data
+ORDER table
+SALES table
+Create sample data inserts:
+Load initial data to the sample tables created in above step
+Load changed data to the table to capture changes in stream (Run this after the step c)
+Create stream to capture changes on top of table
+Run b.ii to load change data to the table
+Run query on Stream to check the changes captured
+Apply the changes to the target table using metadata action columns */
+
+/* use the database and schema created in chapter3 */
+
+/* run below SQLs if chaper 3 setup is not complete */
+/* Create database */
+
+CREATE DATABASE IF NOT EXISTS RETAIL_DEV;
+
+/* Create Schema */
+
+USE DATABASE RETAIL_DEV;
+
+CREATE SCHEMA IF NOT EXISTS PRODUCT; 	--product schema
+CREATE SCHEMA IF NOT EXISTS SALES; 	 --sales schema
+CREATE SCHEMA IF NOT EXISTS CUST; 	--customer schema
+
+
+/* Create RETAIL tables */
+
+USE DATABASE RETAIL_DEV;
+
+USE SCHEMA SALES;
+CREATE OR REPLACE TABLE SALES_HISTORY
+(
+SALES_ID INTEGER,
+CUST_ID INTEGER,
+PRD_ID INTEGER,
+ORDER_ID INTEGER,
+SALES_QTY INTEGER,
+SALES_DATE DATE
+);
+
+CREATE OR REPLACE TABLE ORDER_DETAILS
+(
+ORDER_ID INTEGER,
+ORDER_AMT INTEGER,
+SALES_ID INTEGER,
+CUST_ID INTEGER,
+PRD_ID INTEGER,
+ORDER_QTY INTEGER,
+ORDER_DATE DATE,
+ORDER_STATUS STRING 
+);
+
+/* load sample records to ORDER_DETAILS */
+
+INSERT INTO ORDER_DETAILS VALUES (1011,150,110,001,10,05,'2023-11-20','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1012,250,210,120,214,10,'2023-11-29','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1013,050,310,220,480,09,'2023-11-12','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1014,100,410,320,521,07,'2023-11-26','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1015,125,510,421,592,08,'2023-11-22','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1016,175,610,525,212,12,'2023-11-08','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1017,1500,710,610,190,25,'2023-11-05','COMPLETED');
+INSERT INTO ORDER_DETAILS VALUES (1018,85,810,700,140,15,'2023-12-06','IN-PROGRESS');
+INSERT INTO ORDER_DETAILS VALUES (1019,95,910,801,100,20,'2023-12-05','IN-PROGRESS');
+INSERT INTO ORDER_DETAILS VALUES (1020,350,1010,910,1205,15,'2023-12-02','IN-PROGRESS');
+
+/* CHECK THE RECORDS LOADED */
+
+SELECT * FROM ORDER_DETAILS;
+
+/*INSERT SALES SAMPLE RECORDS */
+
+INSERT INTO SALES_HISTORY SELECT SALES_ID,CUST_ID,PRD_ID,ORDER_ID,ORDER_QTY, ORDER_DATE FROM ORDER_DETAILS;
+
+/* CREATE STREAM */
+create or replace stream ORDER_CHECK on table ORDER_DETAILS;
+
+/*LOAD NEW RECORDS TO THE ORDER_DETAILS*/
+
+INSERT INTO ORDER_DETAILS VALUES (1021,950,910,801,100,35,'2023-12-06','IN-PROGRESS');
+INSERT INTO ORDER_DETAILS VALUES (1025,550,1011,910,1205,25,'2023-12-05','IN-PROGRESS');
+
+/* TRACK THE CHANGES USING STREAM CREATED */
+
+SELECT * FROM ORDER_CHECK;
+
+/* LOAD DATA TO THE SALES TABLE */
+
+INSERT INTO SALES_HISTORY 
+select SALES_ID,CUST_ID,PRD_ID,ORDER_ID,ORDER_QTY, ORDER_DATE 
+from ORDER_CHECK 
+where METADATA$ACTION = 'INSERT';
+
+/* use this stream table to apply merge logic as explained in the chapter */
+
+/* Exercise 2  
+Create Task: Create a task to read data from the stream created in exercise 1 and process the changes on fixed schedule of every 10 minutes.
+Create a task that runs on schedule of every 10 minutes, for all days:
+schedule: 10 days
+Serverless task
+Command to capture changes from stream and apply to the target table
+Create task 
+Change the status of task to RESUME
+Monitor the task while applying changes to the table created in Exercise 1. introduce changes to the data manually to see changes captured.
+*/
+
+/* create task */
+
+CREATE TASK stream_task
+  SCHEDULE = '10 MINUTE'
+AS
+INSERT INTO SALES_HISTORY 
+select SALES_ID,CUST_ID,PRD_ID,ORDER_ID,ORDER_QTY, ORDER_DATE 
+from ORDER_CHECK 
+where METADATA$ACTION = 'INSERT';
+
+/* change the task status */
+
+ALTER TASK stream_task RESUME;
+
+/* Exercise 3 
+1.	Convert the task created in exercise 2 to user-managed task. 
+a.	Convert the task and capture the usage of serverless vs user-managed tasks. */
+
+ALTER TASK stream_task SET USER_TASK_MANAGED_INITIAL_WAREHOUSE_SIZE = 'XSMALL';
+
+/* find the task usage from task history on console or use usage view */
+  
+SELECT query_text, completed_time
+FROM snowflake.account_usage.task_history
+LIMIT 10;
