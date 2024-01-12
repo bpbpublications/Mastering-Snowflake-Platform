@@ -1,2 +1,2 @@
-# The Ultimate Guide to Mastering Snowflake
- The Ultimate Guide to Mastering Snowflake, by BPB Publications
+# Mastering Snowflake Platform
+ Mastering Snowflake Platform, by BPB Publications
